@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const { YoutubeTranscript } = require('youtube-transcript');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const app = express();
@@ -19,6 +18,7 @@ app.get('/', (req, res) => {
 // Fetch YouTube transcript
 app.post('/transcript', async (req, res) => {
   try {
+    const { YoutubeTranscript } = require('youtube-transcript');
     const { videoId } = req.body;
     if (!videoId) return res.status(400).json({ error: 'No videoId provided' });
 
@@ -65,6 +65,6 @@ app.post('/generate', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Studora server running on port ${PORT}`);
 });
