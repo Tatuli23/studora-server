@@ -15,15 +15,28 @@ app.get('/', (req, res) => {
   res.json({ status: 'Studora server is running!' });
 });
 
-// Fetch YouTube transcript
+// Fetch YouTube transcript via Supadata
 app.post('/transcript', async (req, res) => {
   try {
-    const { YoutubeTranscript } = require('youtube-transcript');
     const { videoId } = req.body;
     if (!videoId) return res.status(400).json({ error: 'No videoId provided' });
 
-    const transcriptItems = await YoutubeTranscript.fetchTranscript(videoId);
-    const fullText = transcriptItems.map(item => item.text).join(' ');
+    const response = await fetch(
+      `https://api.supadata.ai/v1/youtube/transcript?videoId=${videoId}&text=true`,
+      { headers: { 'x-api-key': process.env.SUPADATA_API_KEY } }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || 'Transcript fetch failed');
+    }
+
+    const fullText = typeof data.content === 'string'
+      ? data.content
+      : (Array.isArray(data.content) ? data.content.map(s => s.text).join(' ') : '');
+
+    if (!fullText) throw new Error('No transcript available for this video');
 
     res.json({ success: true, transcript: fullText });
   } catch (error) {
